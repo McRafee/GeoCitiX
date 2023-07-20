@@ -175,7 +175,7 @@ BEGIN
   BULK COLLECT INTO v_CityInfo
   FROM citycoordinates c
   WHERE c.cityname <> p_StartCityName
-  ORDER BY distancekm DESC;
+  ORDER BY distancekm;
 
   -- Displaying the results
   FOR i IN 1..v_CityInfo.COUNT LOOP
