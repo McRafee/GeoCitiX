@@ -142,20 +142,28 @@ INSERT INTO CityCoordinates (ID, CityName, Coordinates) VALUES (
 
 -- Procedure creation
 CREATE OR REPLACE PROCEDURE CalculateCityDistance (
-  p_StartCityName IN CityCoordinates.CityName%TYPE
+  p_StartCityName IN citycoordinates.cityname%TYPE
 ) AS
-  v_StartLongitude CityCoordinates.Coordinates.SDO_POINT.X%TYPE;
-  v_StartLatitude CityCoordinates.Coordinates.SDO_POINT.Y%TYPE;
+  TYPE CityInfoRec IS RECORD (
+    CityName citycoordinates.cityname%TYPE,
+    DistanceKM NUMBER
+  );
+  
+  TYPE CityInfoTable IS TABLE OF CityInfoRec;
+  v_CityInfo CityInfoTable;
+  v_StartLongitude NUMBER;
+  v_StartLatitude NUMBER;
 BEGIN
   -- Retrieving coordinates of the starting city
-  SELECT Coordinates.SDO_POINT.X, Coordinates.SDO_POINT.Y
+  SELECT t.x, t.y
   INTO v_StartLongitude, v_StartLatitude
-  FROM CityCoordinates
-  WHERE CityName = p_StartCityName;
+  FROM citycoordinates,
+    TABLE(SDO_UTIL.GETVERTICES(coordinates)) t
+  WHERE cityname = p_StartCityName;
 
   -- Calculating the distance between cities
-  SELECT c.CityName, SDO_GEOM.SDO_DISTANCE(
-    c.Coordinates,
+  SELECT c.cityname, SDO_GEOM.SDO_DISTANCE(
+    c.coordinates,
     SDO_GEOMETRY(
       2001,
       4326,
@@ -163,8 +171,14 @@ BEGIN
       NULL,
       NULL
     ),
-    0.005, 'unit=KM') AS DistanceKM
-  FROM CityCoordinates c
-  WHERE c.CityName <> p_StartCityName
-  ORDER BY DistanceKM DESC;
-END;
+    0.005, 'unit=KM') AS distancekm
+  BULK COLLECT INTO v_CityInfo
+  FROM citycoordinates c
+  WHERE c.cityname <> p_StartCityName
+  ORDER BY distancekm DESC;
+
+  -- Displaying the results
+  FOR i IN 1..v_CityInfo.COUNT LOOP
+    DBMS_OUTPUT.PUT_LINE(v_CityInfo(i).cityname || ': ' || v_CityInfo(i).distancekm || ' km');
+  END LOOP;
+END CalculateCityDistance;
