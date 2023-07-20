@@ -5,11 +5,7 @@
 
 GeoCitiX is a project that demonstrates the usage of Oracle Database, PL/SQL, and spatial data to store and calculate distances between cities using GPS coordinates.
 
-
-
-<p align="center">
-  ![GeoCitiX](cover.png)
-</p>
+![GeoCitiX](cover.png)
 
 ## Table of Contents
 - [Introduction](#introduction)
